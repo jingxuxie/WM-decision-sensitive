@@ -1,0 +1,29 @@
+{
+  "date": "2026-09-15",
+  "python": "3.13.5",
+  "numpy": "2.3.5",
+  "scipy": "1.17.0",
+  "reps": 40,
+  "rate_reps": 1000,
+  "blas_threads": "1",
+  "elapsed_seconds": 5.618211517999953,
+  "raw_rows": 16080,
+  "rate_rows": 12000,
+  "local_remainder_slope": 3.0101172070427618,
+  "nonlinear_feature_covariance_check_op_error": 0.02786599166602576,
+  "confidence_event_failures": 0,
+  "certificate_violations": 0,
+  "oracle_bound_violations": 0,
+  "rank_selections": 600,
+  "certified_rank_selections": 560,
+  "selected_tolerance_violations": 0,
+  "selection_abstentions": 40,
+  "notes": [
+    "Linear and horizon data use exact Gaussian OLS sufficient statistics.",
+    "Horizon n counts reset rollouts; transitions=n*6.",
+    "Nonlinear dictionary is fixed and analytically whitened, not learned.",
+    "Oracle geometry uses true B only as a diagnostic.",
+    "Counts include correlated multiple-rank uses of the same training draw.",
+    "Intervals in summary are Monte Carlo standard errors, not simultaneous CIs."
+  ]
+}
