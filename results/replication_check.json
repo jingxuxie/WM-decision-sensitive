@@ -1,0 +1,12 @@
+{
+  "same_environment_exact_csv_match": {
+    "summary.csv": true,
+    "rate_raw.csv": true,
+    "rank_selection_summary.csv": true,
+    "raw.csv": true,
+    "local_expansion.csv": true,
+    "rank_selection_raw.csv": true,
+    "rate_summary.csv": true
+  },
+  "note": "Independent rerun of all scripted seeds; runtime metadata is excluded."
+}

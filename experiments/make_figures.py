@@ -42,7 +42,7 @@ def main():
         plt.plot([int(r['n']) for r in rows],[float(r['rank_mean']) for r in rows],marker='o',label=f'Tolerance {tol:g}')
     plt.xscale('log');plt.yticks([-1,0,1,2,3,4,5],['Abstain','0','1','2','3','4','5'])
     plt.xlabel('Calibration transitions n');plt.ylabel('Smallest certified rank');plt.legend(fontsize=8);save('certified_rank')
-    # A compact, version-controlled copy contains every main configuration.
+    # A compact generated copy contains every main configuration.
     fields=['suite','scenario','coverage','n','rank','method','replicates','regret_mean','regret_se','forecast_mse_mean','certificate_mean']
     with open(ROOT/'results'/'publication_summary.csv','w',newline='') as f:
         writer=csv.DictWriter(f,fieldnames=fields);writer.writeheader()

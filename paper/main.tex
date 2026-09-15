@@ -1,0 +1,269 @@
+\documentclass{article}
+\usepackage{iclr2027_conference,times}
+\usepackage{amsmath,amssymb,amsthm,mathtools,booktabs,graphicx,microtype}
+\usepackage[hidelinks]{hyperref}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\rank}{\operatorname{rank}}
+\newcommand{\op}{\mathrm{op}}
+\newcommand{\Reg}{\mathcal R}
+\newcommand{\F}{\mathrm F}
+\title{The Statistical Price of Decision-Sensitive World-Model Compression}
+\author{Anonymous research draft\\September 15, 2026}
+\begin{document}
+\maketitle
+\lhead{Research draft --- not submitted}
+\begin{abstract}
+A compact world model should preserve errors that affect decisions, but the geometry defining those errors must often be learned from the same limited data used for compression. We study this problem for rank-constrained, finite-horizon forecast maps with an unknown, uncompressed action response. For whitened quadratic planning, we derive a nonlocal excess-cost certificate that separates forecast error, compression error, and action-calibration error. A single calibration event certifies every candidate representation simultaneously, permitting data-dependent rank selection with an explicit option to abstain. Spectral compression under an inflated metric satisfies a gap-free oracle inequality. A two-dimensional control construction shows an unavoidable inverse-square-root dependence on calibration energy when competing representation directions are nearly tied, even when the true controller is revealed after the encoder is frozen. This connects classical spectral excess-risk behavior to the decision cost of irreversible compression. Experiments on small linear systems, six-step dynamics, and fixed nonlinear features confirm the predicted rate distinction and test the certificates. Importantly, metric inflation does not uniformly improve control: both an exact counterexample and measured failures separate conservative certification from empirical superiority. The results identify a statistical cost of learning what a world-model representation may safely forget.
+\end{abstract}
+
+\section{Introduction}
+A learned world model can allocate most of its accuracy to directions that are easy to predict yet unimportant for action selection. Task-aware prediction and compression address this mismatch by changing the distortion measure. This principle is established: control-sensitive forecast compression admits weighted low-rank solutions \citep{cheng2021}, and task-optimal exploration identifies which model parameters matter for a downstream decision \citep{wagenmaker2021}. The unresolved issue considered here is narrower: what changes when the distortion measure itself is estimated before committing to a limited representation?
+
+An estimated metric can mistake an important direction for an irrelevant one. Compression then makes the mistake difficult to repair: a better controller cannot recover a feature that the deployed encoder never retained. Conversely, treating every uncertain direction as important can waste the available rank. A guarantee about a conservative upper bound must therefore be distinguished from a claim that conservatism improves actual decisions.
+
+We study this interaction in a tractable class of world models. A linear map predicts the future from current state or fixed history features; another map predicts the effects of a finite action sequence. Only the former is compressed. Quadratic tasks provide an exact relationship between representation error and decision cost, avoiding a local Taylor remainder. The setting includes finite-horizon linear dynamics but does not require a reduced latent Markov model.
+
+Our main results are a uniform finite-data decision certificate, a gap-free oracle inequality for spectral compression with uncertain action effects, and a calibration-energy lower bound for a frozen linear encoder. The certificate supports choosing a rank using the same data that generated the candidates. The lower bound remains valid after granting the learner the true controller at deployment, isolating the statistical price of representation choice from ordinary controller estimation. Small experiments also document when inflation is harmful rather than suppressing those cases.
+
+\paragraph{Scope of the contribution.}
+The known-metric weighted approximation, spectral slow/fast-rate distinction, and task-dependent model sensitivity are not new principles. The contribution developed here is their end-to-end combination with an explicit unknown-actuation certificate and a control-realizable information lower bound. All claims concern a fixed quadratic task and reset-data calibration. There is no assertion of a new general theory for arbitrary nonlinear encoders, recurrent latent dynamics, closed-loop replanning, or visual foundation models.
+
+\section{Quadratic planning and forecast compression}
+Let $D\in\R^{p\times d}$ map a state or history feature $x$ to a future output, and let $B\in\R^{p\times m}$ map a planned action vector $u$ to that output. Consider
+\begin{equation}\label{eq:setting}
+ y=Dx+Bu,\qquad \E[xx^\top]=I_d,\qquad
+ J_B(u;x)=\|Dx+Bu\|^2+\|u\|^2.
+\end{equation}
+Known positive task weights and a nonsingular known feature second moment can be absorbed by whitening. Independent, zero-mean deployment noise adds a cost independent of $u$ and does not change the analysis. Targets fixed in advance can be absorbed into the forecast, provided the stated feature model and second moment remain valid.
+
+The learned model is $Fx+\widehat B u$, with $\rank(F)\le r$. A factorization $F=VE$ defines an $r$-dimensional encoder $Ex$ and a forecast decoder $V$. The action map $\widehat B$ is not rank-constrained. This distinction is essential: an arbitrary low-rank forecast map need not admit a recurrent reduced state transition.
+
+Define
+\begin{equation}\label{eq:metric}
+ H_B=I+B^\top B,\quad K_B=H_B^{-1}B^\top,\quad
+ W_B=BK_B=I-(I+BB^\top)^{-1}.
+\end{equation}
+The true optimal action is $u^*=-K_BDx$ and the model-based action is $\widehat u=-K_{\widehat B}Fx$. Our risk is the expected excess \emph{true} cost,
+$\Reg(F,\widehat B)=\E[J_B(\widehat u;x)-J_B(u^*;x)]$.
+
+\begin{proposition}[Exact decision loss; known-metric background]\label{prop:exact}
+For arbitrary $D,B,F,\widehat B$,
+\begin{equation}\label{eq:exact}
+ \Reg(F,\widehat B)=\|H_B^{1/2}(K_{\widehat B}F-K_BD)\|_\F^2.
+\end{equation}
+In particular, $\Reg(F,B)=\|W_B^{1/2}(F-D)\|_\F^2$. If $P_r^*$ projects onto $r$ leading eigenvectors of $L=D^\top W_BD$, then $F_r^*=DP_r^*$ is optimal among all rank-at-most-$r$ forecast maps and
+\begin{equation}\label{eq:oracle}
+ \Reg_r^*:=\inf_{\rank(F)\le r}\Reg(F,B)=\sum_{j>r}\lambda_j(L).
+\end{equation}
+\end{proposition}
+The proof is completion of squares followed by weighted low-rank approximation; it is included for completeness. This is the same general control-weighted compression principle underlying \citet{cheng2021}.
+
+\paragraph{Equal prediction error need not mean equal decision error.}
+For $D=I_2$ and $B=\operatorname{diag}(0,1)$, the rank-one forecasts $\operatorname{diag}(1,0)$ and $\operatorname{diag}(0,1)$ both have squared prediction error one. Their decision losses are $1/2$ and zero, respectively. The difference arises from actuation, not an arbitrary rescaling of state coordinates.
+
+\paragraph{Finite-horizon dynamics.}
+For $s_{t+1}=As_t+B_0a_t$, concatenate $Cs_1,\ldots,Cs_H$ and whiten a positive action penalty. Then $D$ stacks $CA,\ldots,CA^H$, while $B$ is the corresponding block lower-triangular action-response matrix. Equation~\eqref{eq:exact} evaluates an open-loop sequence on the true system. It is not, without further analysis, a bound on repeated model-predictive control or infinite-horizon stability.
+
+\section{A simultaneous certificate under uncertain action effects}
+Suppose a pilot fit $(\widehat D,\widehat B)$ satisfies a joint calibration event
+\begin{equation}\label{eq:event}
+ \|\widehat D-D\|_\F\le e_D,\qquad
+ \|\widehat B-B\|_\op\le e_B.
+\end{equation}
+No independence between the two estimation errors is assumed. Put $\eta=\min\{e_B,1\}$, $\widehat W=W_{\widehat B}$, and $\overline W=\widehat W+\eta I_p$.
+
+\begin{lemma}[Global actuation sensitivity]\label{lem:lipschitz}
+For any action maps $B,C$,
+\begin{align}
+ \|W_B-W_C\|_\op&\le\min\{\|B-C\|_\op,1\},\label{eq:wlip}\\
+ \|K_B-K_C\|_\op&\le\|B-C\|_\op,\label{eq:klip}\\
+ \|H_B^{1/2}(K_C-K_B)\|_\op&\le\tfrac32\|C-B\|_\op.\label{eq:weightedklip}
+\end{align}
+These inequalities require no small-perturbation condition or upper bound on $\|B\|_\op$.
+\end{lemma}
+The proof uses the resolvent of $\left[\begin{smallmatrix}I&B\\-B^\top&I\end{smallmatrix}\right]$ and the regularization supplied by the positive action cost. In particular, $W_B\preceq\overline W$ on~\eqref{eq:event}.
+
+\begin{theorem}[Uniform decision certificate]\label{thm:certificate}
+On event~\eqref{eq:event}, simultaneously for every forecast matrix $F$,
+\begin{equation}\label{eq:certificate}
+ \sqrt{\Reg(F,\widehat B)}\le
+ \underbrace{\|\overline W^{1/2}(F-\widehat D)\|_\F
+ +e_D+\tfrac32e_B\|F\|_\F}_{\displaystyle \sqrt{\mathcal C(F)}}.
+\end{equation}
+Consequently, any data-dependent choice $\widehat F$ with $\mathcal C(\widehat F)\le t$ has $\Reg(\widehat F,\widehat B)\le t$ on the same event.
+\end{theorem}
+\begin{proof}[Proof sketch]
+Split the action error as $K_B(F-D)+(K_{\widehat B}-K_B)F$. Bound its first weighted norm using $W_B\preceq\overline W$, $W_B\preceq I$, and $F-D=(F-\widehat D)+(\widehat D-D)$. Bound the second using~\eqref{eq:weightedklip}. All steps are deterministic and hold for every $F$, including one selected after observing the data.
+\end{proof}
+
+A practical consequence is \emph{rank selection with abstention}: construct candidates $F_0,\ldots,F_d$, compute $\mathcal C(F_r)$, and select the smallest rank satisfying a chosen tolerance. If no candidate passes, return ``not certified.'' Even full rank need not pass when action calibration is weak. Neither candidate independence nor a union bound over ranks is needed, since the event already controls all candidates. This does not provide an unlimited-time guarantee across repeatedly acquired datasets without allocating their failure probabilities.
+
+\subsection{An explicit finite-sample calibration event}
+Let $Z\in\R^{(d+m)\times n}$ be a fixed reset-probe design, $V=ZZ^\top\succ0$, and observe
+\begin{equation}\label{eq:data}
+ Y=[D\ B]Z+\sigma G,\qquad G_{ij}\stackrel{\mathrm{iid}}\sim N(0,1).
+\end{equation}
+The noise scale $\sigma$ is known. Fit $[\widehat D\ \widehat B]=YZ^\top V^{-1}$. Let $C_D$ and $C_B$ denote the state/history and action diagonal blocks of $V^{-1}$, respectively, and $a_\delta=\sqrt{2\log(2/\delta)}$.
+
+\begin{corollary}[Gaussian reset-data certificate]\label{cor:gaussian}
+Event~\eqref{eq:event} has probability at least $1-\delta$ for
+\begin{align}
+ e_D&=\sigma\sqrt{\lambda_{\max}(C_D)}\big(\sqrt{pd}+a_\delta\big),\label{eq:ed}\\
+ e_B&=\sigma\sqrt{\lambda_{\max}(C_B)}\big(\sqrt p+\sqrt m+a_\delta\big).\label{eq:eb}
+\end{align}
+Thus Theorem~\ref{thm:certificate} certifies data-dependent representations and ranks at level $1-\delta$.
+\end{corollary}
+The same conditional statement holds for random reset designs independent of output noise. Ordinary on-trajectory regression can violate this independence and is not covered. Missing action coverage makes $V$ singular; changing the loss cannot repair this failure. The radii expose both ambient dimension and coverage rather than hiding them in an unspecified sample-complexity term.
+
+\section{Spectral compression and an oracle inequality}
+A simple candidate family is obtained by retaining the leading right eigenspace of the inflated pilot geometry:
+\begin{equation}\label{eq:algorithm}
+ \widehat P_r\in\arg\max_{P=P^\top=P^2,\,\tr P=r}
+       \tr(P\widehat D^\top\overline W\widehat D),\qquad
+ \widehat F_r=\widehat D\widehat P_r.
+\end{equation}
+This minimizes the first squared term in~\eqref{eq:certificate}. It does \emph{not} generally minimize the entire certificate because the action-error term also depends on $F$.
+
+\begin{theorem}[Gap-free oracle inequality]\label{thm:oracle}
+Let $T_r^*=\|D(I-P_r^*)\|_\F^2$, with any choice of the true optimal projector in Proposition~\ref{prop:exact}. On event~\eqref{eq:event},
+\begin{equation}\label{eq:oraclebound}
+ \sqrt{\Reg(\widehat F_r,\widehat B)}\le
+ \sqrt{\Reg_r^*+2\eta T_r^*}
+ +(1+\sqrt{1+\eta})e_D+\tfrac32e_B\|\widehat D\|_\F.
+\end{equation}
+No eigengap or recovery of the true optimal subspace is required.
+\end{theorem}
+The term $2\eta T_r^*$ measures the cost of uncertainty about the importance of discarded directions. When $r=d$, both tail terms vanish; for fixed dimension, bounded $D$, and well-conditioned design, the right-hand side squared is $O(n^{-1})$. At a genuine bottleneck, sensitivity uncertainty can instead yield $O(n^{-1/2})$ excess above a nonzero oracle loss. Constants deteriorate with insufficient excitation and with the explicit dimension factors in~\eqref{eq:ed}--\eqref{eq:eb}.
+
+The inflated criterion has a limited robust interpretation. For a residual $A$, the supremum of $\tr(A^\top W'A)$ over all $W'\succeq0$ with $\|W'-\widehat W\|_\op\le\eta$ equals $\tr(A^\top\overline W A)$. This is an \emph{outer} metric uncertainty set: some matrices in it do not correspond to physical $W_B$, which always satisfies $W_B\prec I$. The certificate trades tightness for an explicit computable bound.
+
+\paragraph{Conservative does not mean uniformly better.}
+For $D=\operatorname{diag}(2,1)$ and $B=\operatorname{diag}(0,1)$, exact plug-in geometry retains the second coordinate at rank one and has zero regret. An inflation of $\eta=1/4$ changes the two spectral scores to $1$ and $3/4$, retains the first coordinate, and incurs regret $1/2$. A conservative confidence radius may be positive even if a particular estimate equals the truth. Therefore an upper confidence metric alone cannot imply dominance over the plug-in representation.
+
+\section{The calibration cost of irreversible compression}
+The dependence on uncertain geometry is not only an artifact of the certificate. It can occur even if the forecast map is known exactly and deployment receives an oracle controller.
+
+\begin{theorem}[Calibration-energy lower bound]\label{thm:lower}
+Let $\sigma>0$, $x\sim N(0,I_2)$, $D=I_2$, and let the action map be one of
+\[
+ B_+=\operatorname{diag}(1+a,1-a),\qquad
+ B_-=\operatorname{diag}(1-a,1+a).
+\]
+A learner observes calibration data $y_t=B_su_t+\xi_t$, where $\xi_t\sim N(0,\sigma^2 I_2)$ independently and even a finite sequence of adaptive probes satisfies $\sum_t\|u_t\|^2\le\mathcal E$ almost surely. It then freezes a rank-one linear encoder. At deployment the true $B_s$ is revealed, and the learner may use any controller of the encoded state. For
+\[
+ a=\min\{1/2,\sigma/(4\sqrt{\mathcal E})\},
+\]
+with $a=1/2$ when $\mathcal E=0$, every encoder-selection procedure has, in at least one world, expected excess cost above that world's optimal rank-one representation of at least
+\begin{equation}\label{eq:lower}
+ \frac38\left[\frac{(1+a)^2}{1+(1+a)^2}
+             -\frac{(1-a)^2}{1+(1-a)^2}\right]
+ \ge\frac{36}{169}a.
+\end{equation}
+\end{theorem}
+The lower bound is $\Omega(\min\{1,\sigma/\sqrt{\mathcal E}\})$. It concerns a \emph{family of near-tie instances indexed by energy}, not a fixed well-separated system. Without compression the representation penalty in this favorable oracle-deployment experiment is zero. The unknown direction of actuation is therefore costly specifically because an encoder is committed before calibration is complete. The proof is a Gaussian change-of-measure argument, with conditional expectation characterizing the best controller using a linear encoding.
+
+\paragraph{Relation to classical spectral rates.}
+For known $D$, set $L=D^\top W_BD$, $\widehat L=D^\top W_{\widehat B}D$, and $\tau=\|\widehat L-L\|_\op$. For $1\le r<d$, standard variational arguments for spectral excess risk \citep{reiss2020} give
+\begin{equation}\label{eq:pca}
+ \tr[L(P_r^*-\widehat P_r)]\le2r\tau,
+ \quad\text{and, if }\gamma=\lambda_r(L)-\lambda_{r+1}(L)>0,
+ \quad\tr[L(P_r^*-\widehat P_r)]\le\frac{4r\tau^2}{\gamma}.
+\end{equation}
+Here $\widehat P_r$ is the \emph{uninflated plug-in} projector, without inflation. Lemma~\ref{lem:lipschitz} gives $\tau\le\|D\|_\op^2 e_B$. Hence fixed-dimensional Gaussian calibration yields the familiar gap-free $n^{-1/2}$ and separated $n^{-1}$ behaviors. We do not claim these spectral rates as new; Theorem~\ref{thm:lower} embeds the hard regime in a controlled system and states it in action-calibration energy.
+
+\section{Experiments}
+All experiments run on CPU with explicit matrix operations. We evaluate exact expected decision regret, not just prediction error, and use the same training draw for all methods at a given seed. The linear and lifted-dynamics suites sample the \emph{exact Gaussian OLS sufficient-statistic distribution} for a fixed reset design $ZZ^\top=n\operatorname{diag}(I_d,\kappa I_m)$, which exists for $n\ge d+m$. The nonlinear-feature suite generates actual reset observations and fits OLS. Full configurations, random seeds, raw measurements, and generating code accompany the manuscript.
+
+\paragraph{Methods and budgets.}
+Prediction uses ordinary rank-$r$ SVD of $\widehat D$. Plug-in uses $W_{\widehat B}$, and Inflated uses $W_{\widehat B}+\eta I$ with the analytical $95\%$ radii above; there is no validation-selected inflation constant. Oracle geometry uses true $B$ only to select directions, but still uses $\widehat D$ and deploys $\widehat B$; it is a privileged diagnostic, not a deployable competitor. Full uses the uncompressed forecast and therefore has a different capacity. The horizon suite additionally includes a balanced-state forecast baseline estimated from the same data, retaining the same full action map as all other methods.
+
+\begin{figure}[t]
+\centering\includegraphics[width=.88\linewidth]{figures/rates.pdf}
+\caption{Representation-selection excess with known $D=I_2$ and oracle action calibration at deployment. The near-tie family follows the construction in Theorem~\ref{thm:lower}; the separated family fixes $a=.04$. Points average 1,000 independent training draws per condition; bars are two standard errors. The lower-bound curve is not an upper confidence curve.}\label{fig:rates}
+\end{figure}
+
+\paragraph{Rate isolation.}
+For $n\in\{32,128,512,2048,8192,32768\}$ we calibrate a $2\times2$ action map with noise $\sigma=.5$ and energy $2n$. The near-tie construction sets $a=\sigma/(4\sqrt{2n})$, while the separated construction fixes $a=.04$. Near-tie mean excess falls from $.006442$ to $.000218$; its normalization $\sqrt n/\sigma$ remains between $.0725$ and $.0791$. In the separated case, mean excess falls from $.012035$ to $.000025$, exhibiting the faster asymptotic behavior in~\eqref{eq:pca}. Adding scalar inflation has no effect on this isotropic-$D$ eigenspace, so this experiment tests the statistical mechanism rather than claiming a benefit for inflation.
+
+\paragraph{Finite-data forecast compression.}
+The six-dimensional linear suite varies action coverage $\kappa\in\{.03,1\}$, sample count $n\in\{48,192,768,3072\}$, and rank $r\in\{1,2,3\}$, with 40 training draws per condition. Two systems share forecast singular values but have either weak actuation aligned with predictive energy or conflicting predictive and decision priorities. Inflation sometimes reduces plug-in over-specialization under weak calibration, but can remain substantially worse when the true decision geometry conflicts with predictive variance. Table~\ref{tab:results} deliberately includes both outcomes; it is not a selected winner-only comparison.
+
+\begin{table}[t]
+\centering\small
+\resizebox{\linewidth}{!}{\input{results_table.tex}}
+\caption{True excess planning cost (mean $\pm$ one standard error over 40 training draws). Rows use, respectively, $n=192,768,256,256$ and action coverages $.03,.03,.3,.1$. Linear ranks are one; the remaining ranks are two. Full is uncompressed and not capacity-matched. All configurations, including oracle geometry and the balanced-state baseline, are in the supplied CSV.}\label{tab:results}
+\end{table}
+
+\paragraph{Temporal and nonlinear checks.}
+A four-state, two-action, nonnormal system is lifted to horizon six. Noise is independent measurement noise on stacked outputs, not correlated process noise. Calibration counts are reset rollouts, each using six transitions. A second environment maps four Gaussian state coordinates through a fixed ten-feature dictionary containing linear, sine, and product terms. Its feature covariance is analytically whitened, allowing exact expected regret. This is a nonlinear \emph{state-feature} test with linear action response, not end-to-end nonlinear representation learning. Both checks preserve the distinction between a useful task metric and an overly conservative inflation.
+
+\paragraph{Certificates and rank selection.}
+Across 1,040 main training draws and 16,080 method/rank evaluations, no observed certificate or oracle-inequality violation occurs. Multiple ranks on one draw are correlated and do not constitute independent confidence trials. A separate rank-selection experiment issues 600 tolerance queries on 200 fits: 560 are certified, 40 abstain, and none of the certified choices exceeds its tolerance. At tolerance $.1$, selected ranks decrease from four to two as $n$ increases from 48 to 12,288. These are diagnostic checks of the implementation, not evidence that assumptions can be relaxed or that a conservative $95\%$ certificate is tight.
+
+\section{Related work and limitations}
+Control-sensitive forecast compression already couples a quadratic controller to a weighted low-rank predictor \citep{cheng2021}. Task-optimal exploration characterizes task-dependent parameter geometry and instance-dependent data requirements \citep{wagenmaker2021}. CoBRAS combines state and gradient covariance to preserve sensitive low-variance directions in reduced nonlinear systems \citep{otto2023}. These works rule out novelty claims based solely on weighting prediction loss or preserving small but consequential features. Value equivalence similarly motivates models that preserve decisions rather than all details of an environment \citep{grimm2020}.
+
+The slow/fast excess-risk distinction and its eigengap dependence are classical spectral-statistical phenomena \citep{reiss2020}. Here we use that machinery transparently, supply an exact control reduction with learned actuation, and study simultaneous certification and an irreversible-encoder calibration lower bound. Establishing priority for every technical refinement would require a broader independent literature review; no claim of being the first task-aware compression method is intended.
+
+Our theory assumes known quadratic costs, known input whitening, Gaussian noise with known scale for the explicit confidence construction, and full-rank reset-data coverage. The lower bound restricts the encoder to be linear. The forecast representation can depend on the task and horizon, and the action map remains full-dimensional. There are no experiments on images, robots, learned feature dictionaries, action constraints, distribution shift, or closed-loop stability. Balanced-state reduction is included only in the lifted linear experiment. Inflation is demonstrably not uniformly beneficial; tighter physically realizable ambiguity sets and direct minimization of the full certificate are natural extensions, not established results of this paper.
+
+\clearpage
+\begin{figure}[t]
+\centering\includegraphics[width=.88\linewidth]{figures/certified_rank.pdf}
+\caption{The smallest rank whose simultaneous certificate meets a requested tolerance. ``Abstain'' means no tested rank is certified. Each point averages 40 draws; the selected ranks coincide across these draws. More data can justify more compression, not only a better predictor at a fixed rank.}\label{fig:rank}
+\end{figure}
+
+\section{Conclusion}
+Decision-sensitive compression has a statistical prerequisite: the data must identify which directions may be discarded. In a finite-horizon quadratic setting, a global actuation perturbation bound yields a simultaneous decision certificate and a gap-free compression guarantee. A controlled two-point construction shows that selecting an irreversible representation can incur an inverse-square-root calibration cost, even after giving the learner the true deployed controller. The practical lesson is twofold: rank should reflect calibration evidence, and a valid conservative certificate should not be mistaken for a claim of superior control on every instance.
+
+\clearpage
+\section*{Reproducibility statement}
+All experiments are synthetic and require NumPy, SciPy, and Matplotlib, with pytest for numerical checks. The package includes explicit configurations, seed-level CSVs, aggregate CSVs, scripts that regenerate the figures and table, and complete proofs below. The recorded main run used Python 3.13.5, NumPy 2.3.5, and SciPy 1.17.0 with one BLAS thread, and took 5.62 seconds in the available CPU environment, excluding figure generation, tests, and manuscript compilation. This is not a timing measurement on a particular consumer laptop. No API credits or GPU training were used. The implementation tests identities and inequalities numerically; they are not a formal proof assistant verification.
+
+\section*{Ethics statement}
+This work uses no human-subject, personal, or licensed benchmark data. Its certificates depend on specified statistical and task assumptions and should not be represented as deployment safety guarantees for robots or other physical systems outside those assumptions. Reporting abstention and harmful inflation cases is important to avoid overclaiming reliability.
+
+\section*{AI use statement}
+An AI assistant was used extensively in research formulation, mathematical derivation, implementation, synthetic experiment execution, literature checking, and manuscript drafting. The mathematical statements have written proofs and numerical checks, but independent human proof review, novelty assessment, and final authorship responsibility remain necessary before submission. No claim is made that such independent review has already occurred. This statement records the actual workflow rather than attributing unaudited validation to human authors.
+
+\begin{thebibliography}{9}
+\bibitem[Cheng et~al.(2021)]{cheng2021}
+Jiangnan Cheng, Marco Pavone, Sachin Katti, Sandeep Chinchali, and Ao Tang.
+Data sharing and compression for cooperative networked control.
+\emph{Advances in Neural Information Processing Systems}, 34, 2021.
+\url{https://arxiv.org/abs/2109.14675}.
+\bibitem[Grimm et~al.(2020)]{grimm2020}
+Christopher Grimm, Andr\'e Barreto, Satinder Singh, and David Silver.
+The value equivalence principle for model-based reinforcement learning.
+\emph{Advances in Neural Information Processing Systems}, 33, 2020.
+\url{https://arxiv.org/abs/2011.03506}.
+\bibitem[Otto et~al.(2023)]{otto2023}
+Samuel E. Otto, Alberto Padovan, and Clarence W. Rowley.
+Model reduction for nonlinear systems by balanced truncation of state and gradient covariance.
+\emph{SIAM Journal on Scientific Computing}, 2023.
+\url{https://arxiv.org/abs/2207.14387}.
+\bibitem[Rei\ss{} \& Wahl(2020)]{reiss2020}
+Markus Rei\ss{} and Martin Wahl.
+Nonasymptotic upper bounds for the reconstruction error of PCA.
+\emph{The Annals of Statistics}, 48(2), 2020.
+\url{https://arxiv.org/abs/1609.03779}.
+\bibitem[Vershynin(2018)]{vershynin2018}
+Roman Vershynin.
+\emph{High-Dimensional Probability: An Introduction with Applications in Data Science}.
+Cambridge University Press, 2018.
+\bibitem[Wagenmaker et~al.(2021)]{wagenmaker2021}
+Andrew J. Wagenmaker, Max Simchowitz, and Kevin Jamieson.
+Task-optimal exploration in linear dynamical systems.
+\emph{Proceedings of the 38th International Conference on Machine Learning},
+139:10641--10652, 2021.
+\url{https://proceedings.mlr.press/v139/wagenmaker21a.html}.
+\end{thebibliography}
+
+\input{appendix}
+\end{document}

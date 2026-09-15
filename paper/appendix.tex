@@ -1,0 +1,168 @@
+\clearpage\appendix
+\section{Complete proofs}
+\subsection{Exact decision geometry and optimal compression}
+Expanding~\eqref{eq:setting} gives
+\[
+ J_B(u;x)=x^\top D^\top Dx+2u^\top B^\top Dx+u^\top H_Bu.
+\]
+Because $H_B\succ0$, its unique minimizer is $-K_BDx$ and
+$J_B(u;x)-J_B(u^*;x)=(u-u^*)^\top H_B(u-u^*)$.
+Taking expectation with $\E[xx^\top]=I$ proves~\eqref{eq:exact}. If $\widehat B=B$, then $K_B^\top H_BK_B=W_B$, which yields the weighted forecast loss. Woodbury's identity gives $W_B=I-(I+BB^\top)^{-1}$, so $0\preceq W_B\prec I$.
+
+For any $F$ with rank at most $r$, $W_B^{1/2}F$ also has rank at most $r$. The best rank-$r$ approximation error to $W_B^{1/2}D$ is the sum of its squared singular values after $r$. Its truncated right-singular-vector reconstruction is $W_B^{1/2}DP_r^*$, and this is feasible by choosing $F=DP_r^*$. Thus the bound is attained even when $W_B$ is singular. The squared singular values are the eigenvalues of $D^\top W_BD$, proving Proposition~\ref{prop:exact}.
+
+\subsection{Proof of global actuation sensitivity}
+Define the block matrix
+\[
+ \mathcal A_B=\begin{pmatrix}I_p&B\\-B^\top&I_m\end{pmatrix}=I+S_B.
+\]
+Since $S_B$ is skew-symmetric, $\|(I+S_B)v\|^2=\|v\|^2+\|S_Bv\|^2$, hence $\|\mathcal A_B^{-1}\|_\op\le1$. Its upper-left block is $I-W_B$, and its lower-left block is $K_B$. The resolvent identity gives
+\[
+ \|\mathcal A_B^{-1}-\mathcal A_C^{-1}\|_\op
+ \le\|\mathcal A_C-\mathcal A_B\|_\op=\|C-B\|_\op.
+\]
+Taking blocks proves the Lipschitz parts of~\eqref{eq:wlip} and~\eqref{eq:klip}. Since both metrics lie between zero and the identity in Loewner order, their difference also has operator norm at most one.
+
+For the weighted bound, put $E=C-B$. Direct substitution of $H_CK_C=C^\top$ yields
+\begin{equation}\label{eq:weightedidentity}
+ H_B(K_C-K_B)=E^\top(I-CK_C)-B^\top E K_C.
+\end{equation}
+Indeed, $E^\top(I-CK_C)-B^\top EK_C
+=E^\top+(B^\top B-C^\top C)K_C
+=H_BK_C-B^\top$.
+Now $\|H_B^{-1/2}\|_\op\le1$, $\|I-CK_C\|_\op\le1$, and $\|H_B^{-1/2}B^\top\|_\op\le1$. The singular values of $K_C$ are $s/(1+s^2)$ and are at most $1/2$. Left-multiplying~\eqref{eq:weightedidentity} by $H_B^{-1/2}$ proves
+$\|H_B^{1/2}(K_C-K_B)\|_\op\le\|E\|_\op+\frac12\|E\|_\op$.
+This proves Lemma~\ref{lem:lipschitz} globally.
+
+\subsection{Proof of the simultaneous certificate}
+On~\eqref{eq:event}, Lemma~\ref{lem:lipschitz} implies $W_B\preceq\overline W$. Using the exact identity and the triangle inequality,
+\begin{align*}
+ \sqrt{\Reg(F,\widehat B)}
+ &\le\|H_B^{1/2}K_B(F-D)\|_\F
+    +\|H_B^{1/2}(K_{\widehat B}-K_B)F\|_\F\\
+ &\le\|W_B^{1/2}(F-D)\|_\F+\tfrac32e_B\|F\|_\F\\
+ &\le\|\overline W^{1/2}(F-\widehat D)\|_\F
+      +\|W_B^{1/2}(\widehat D-D)\|_\F+\tfrac32e_B\|F\|_\F\\
+ &\le\|\overline W^{1/2}(F-\widehat D)\|_\F+e_D+\tfrac32e_B\|F\|_\F.
+\end{align*}
+No probability statement is conditioned on a chosen $F$ in this derivation. Therefore the inequality is simultaneous, including for arbitrary data-dependent candidates. Applying it to a selected candidate whose certificate is at most $t$ proves the rank-selection conclusion.
+
+\subsection{Proof of the Gaussian calibration corollary}
+Conditional on $Z$, each row of the OLS error is a centered Gaussian vector with covariance $\sigma^2V^{-1}$. Its forecast block consequently has the distribution $\sigma G_D C_D^{1/2}$, and its action block has the distribution $\sigma G_B C_B^{1/2}$, with marginally standard Gaussian matrices of dimensions $p\times d$ and $p\times m$. The blocks need not be mutually independent.
+
+For a standard Gaussian vector $g\in\R^q$, Gaussian concentration for the 1-Lipschitz Euclidean norm and $\E\|g\|\le\sqrt q$ gives $\Pr(\|g\|>\sqrt q+t)\le e^{-t^2/2}$. The analogous matrix inequality is
+\[
+ \Pr(\|G_B\|_\op>\sqrt p+\sqrt m+t)\le e^{-t^2/2}.
+\]
+One standard derivation bounds $\E\sup_{v,w}v^\top G_Bw$ by $\E\|g_p\|+\E\|g_m\|$ using Gaussian comparison, then applies concentration because operator norm is 1-Lipschitz in Frobenius norm; see \citet{vershynin2018}. These Gaussian concentration facts are background ingredients, not new claims here.
+
+Apply the vector inequality to $\operatorname{vec}(G_D)$, the matrix inequality to $G_B$, and $\|AC^{1/2}\|\le\|A\|\sqrt{\lambda_{\max}(C)}$. Setting $t=\sqrt{2\log(2/\delta)}$ and taking a union bound over these two events proves~\eqref{eq:ed}--\eqref{eq:eb}. Conditioning and averaging proves the random-reset-design version when design and noise are independent. A singular design has no such inverse-Gram certificate.
+
+\subsection{Proof of the oracle inequality}
+Write $q(P)=\|\overline W^{1/2}\widehat D(I-P)\|_\F^2$. The spectral rule minimizes $q$, so $q(\widehat P_r)\le q(P_r^*)$. Also,
+\[
+ \overline W\preceq W_B+2\eta I,\qquad
+ \|\overline W\|_\op\le1+\eta.
+\]
+Using the triangle inequality at $P_r^*$,
+\begin{align*}
+ \sqrt{q(P_r^*)}
+ &\le\|\overline W^{1/2}D(I-P_r^*)\|_\F
+      +\|\overline W^{1/2}(\widehat D-D)(I-P_r^*)\|_\F\\
+ &\le\sqrt{\Reg_r^*+2\eta T_r^*}+\sqrt{1+\eta}\,e_D.
+\end{align*}
+Insert this into Theorem~\ref{thm:certificate} at $\widehat F_r=\widehat D\widehat P_r$ and use $\|\widehat D\widehat P_r\|_\F\le\|\widehat D\|_\F$. This proves~\eqref{eq:oraclebound}. If eigenvalues tie at the cutoff, every chosen optimal projector is admissible; the inequality does not require identifying one unique subspace.
+
+\subsection{Proof of the metric-ambiguity interpretation and harm example}
+If $\|W'-\widehat W\|_\op\le\eta$, then $W'\preceq\widehat W+\eta I$. Hence every residual $A$ obeys $\tr(A^\top W'A)\le\tr(A^\top\overline W A)$. Equality is attained by $W'=\overline W$, which is positive semidefinite and belongs to this outer ambiguity set. This proves the stated minimax interpretation, not a minimax guarantee over physically realizable action maps.
+
+For the counterexample, $W_B=\operatorname{diag}(0,1/2)$ and $D^\top W_BD=\operatorname{diag}(0,1/2)$. The exact metric therefore keeps the second coordinate. With $\eta=1/4$, $D^\top(W_B+\eta I)D=\operatorname{diag}(1,3/4)$, so inflation keeps the first instead. The discarded weighted energy is $1/2$. Both conclusions follow directly from Proposition~\ref{prop:exact}, without an approximation.
+
+\subsection{Proof of the calibration-energy lower bound}
+We may grant the learner the exact forecast $D=I_2$ in calibration and the exact action map at deployment. This can only reduce the difficulty relative to ordinary unknown-model compression. Let $P$ denote the row-space projector of a chosen rank-one encoder. Since $x$ is standard Gaussian, $\E[x\mid Ex]=Px$. Conditional minimization of the quadratic objective shows that the best action based on $Ex$ is $-K_{B_s}Px$. Its excess over full information is
+\[
+ \tr[W_{B_s}(I-P)].
+\]
+This also lower-bounds the cost of any possibly nonlinear controller of the same linear encoding.
+
+Define $w(t)=t^2/(1+t^2)$, $\Delta=w(1+a)-w(1-a)>0$, and $f=P_{11}\in[0,1]$. In the plus world, excess over the best rank-one encoder is $\Delta(1-f)$; in the minus world it is $\Delta f$. The trace of $P$ is one. A lower-rank encoder can only be worse and can be augmented to rank one for this lower-bound argument.
+
+Let $\mathbb P_+$ and $\mathbb P_-$ denote the joint laws of the complete adaptive calibration transcript, including the learner's randomization. Under a common policy, actions have the same conditional selection rule given a transcript. The Gaussian chain rule therefore gives
+\[
+ D_{\mathrm{KL}}(\mathbb P_+\|\mathbb P_-)
+ =\E_+\sum_t\frac{\|(B_+-B_-)u_t\|^2}{2\sigma^2}
+ \le\frac{2a^2\mathcal E}{\sigma^2}.
+\]
+The stated choice of $a$ makes this at most $1/8$. Pinsker's inequality gives $\operatorname{TV}(\mathbb P_+,\mathbb P_-)\le1/4$. For any randomized statistic $f\in[0,1]$, the difference of its expectations is at most total variation. Averaging the two excess risks consequently gives
+\[
+ \frac\Delta2(1-\E_+f+\E_-f)
+ \ge\frac\Delta2(1-\operatorname{TV})\ge\frac{3\Delta}{8}.
+\]
+The larger of the two risks is at least the average.
+
+Finally, $w'(t)=2t/(1+t^2)^2$ has minimum $48/169$ on $[1/2,3/2]$. Since $1\pm a$ lie in this interval,
+$\Delta=\int_{1-a}^{1+a}w'(t)\,dt\ge96a/169$.
+Multiplication by $3/8$ proves~\eqref{eq:lower}. At zero energy, the transcript laws are identical and the same, slightly loose, bound remains valid with $a=1/2$.
+
+\subsection{Spectral slow and fast bounds}
+We include the short variational proof to make the relationship to established PCA excess-risk arguments explicit \citep{reiss2020}. Let $P_*$ and $\widehat P$ be top-$r$ projectors of $L$ and $\widehat L$, and put $\Delta_L=\widehat L-L$, $f=\tr L(P_*-\widehat P)\ge0$. Optimality of $\widehat P$ implies
+\[
+ f\le\tr[\Delta_L(\widehat P-P_*)]
+ \le\tau\|\widehat P-P_*\|_*.
+\]
+The nuclear norm on the right is at most $2r$, proving the first bound. If the eigenvalue gap is $\gamma>0$, expanding $\widehat P$ in an eigenbasis of $L$ gives the standard curvature inequality
+\[
+ f\ge\frac\gamma2\|P_*-\widehat P\|_\F^2.
+\]
+Also $\rank(P_*-\widehat P)\le2r$, so its nuclear norm is at most $\sqrt{2r}$ times its Frobenius norm. If that norm is positive, combining the last two displays gives it at most $2\tau\sqrt{2r}/\gamma$, and substituting back yields $f\le4r\tau^2/\gamma$. The zero-norm case is immediate. This proves~\eqref{eq:pca} without requiring exact eigenspace recovery as a separate objective.
+
+\section{Experimental specification and additional results}
+\subsection{Paired comparisons and uncertainty reporting}
+For each system, coverage, and sample count, methods and ranks share one pilot fit per seed. There are 640 fits in the six-dimensional linear suite, 160 in the horizon suite, and 240 in the nonlinear-feature suite, totaling 1,040. The 16,080 evaluations include repeated use of those fits. Summary standard errors are the sample standard deviation across training draws divided by the square root of the number of draws, not trajectory-level errors. They are not simultaneous confidence intervals. Main experiments use 40 draws per condition; the rate experiment uses 1,000 per condition and has 12,000 rows. The rank-selection experiment uses 200 fits and three tolerances per fit.
+
+The exact Gaussian sufficient-statistic sampler uses independent entries with standard deviations $\sigma/\sqrt n$ in the forecast coefficient block and $\sigma/\sqrt{n\kappa}$ in the action block. This is exactly the OLS law under the specified orthogonal reset design, not an asymptotic approximation or a claim to have separately materialized every training observation. In the horizon experiment, independent measurement noise is assumed on each stacked output coordinate. The law would differ with accumulated process noise.
+
+\subsection{Linear systems}
+The forecast singular values are $(3,2.2,1.5,1,.6,.3)$. Common fixed orthogonal output, feature, and action rotations are generated with seed 20260915. The aligned-weak action singular values are $(.08,.075,.06,.05,.03,.02)$; the conflicting ones are $(.03,.06,.12,.4,1,2)$. Forecast and action maps share the specified output singular directions. Output noise is $\sigma=.2$. Coverage is $.03$ or one, samples are 48, 192, 768, or 3072, and ranks are one through three. Training seeds are the explicit integer formulas in the generating script; evaluation outcomes do not choose inflation or a model.
+
+\begin{figure}[h]
+\centering\includegraphics[width=.88\linewidth]{figures/aligned_weak.pdf}
+\caption{Rank-one representations under weak coverage ($\kappa=.03$), with weak actuation aligned with predictive energy. Inflation can reduce the plug-in method's calibration-induced excess. Bars are two standard errors across 40 training draws.}\label{fig:aligned}
+\end{figure}
+\begin{figure}[h]
+\centering\includegraphics[width=.88\linewidth]{figures/conflicting.pdf}
+\caption{The same rank and action coverage with conflicting predictive and decision priorities. Conservative inflation can remain close to task-agnostic prediction and substantially worse than plug-in geometry. Oracle geometry is privileged and still deploys the noisy action map.}\label{fig:conflicting}
+\end{figure}
+
+\subsection{Six-step dynamics and the balanced-state comparator}
+The physical system has
+\[
+ A=\begin{pmatrix}.82&.7&0&0\\0&.65&0&0\\0&0&.8&.4\\0&0&0&.7\end{pmatrix},\quad
+ B_0=\begin{pmatrix}0&0\\1&0\\0&0\\0&1\end{pmatrix},\quad
+ C=\operatorname{diag}(1,\sqrt{.1},1,\sqrt{.1}).
+\]
+We use $H=6$, unit action penalty, $\sigma=.03$, $\kappa=.3$, 64 to 4096 reset rollouts, and ranks one through three. Thus $D$ is $24\times4$ and the stacked action map is $24\times12$. The number of physical transitions is six times the number of rollouts.
+
+The balanced-state forecast baseline estimates $A$ and $B_0$ from the first-step rows of the \emph{same} fitted rollout map, using the known invertible $C$ and known time layout. It forms finite-horizon controllability and observability Gramians with $k=0,\ldots,H-1$, factors them as $R_cR_c^\top$ and $R_oR_o^\top$, and takes the SVD of $R_o^\top R_c$. The usual balancing projection defines a reduced transition $A_r$, and its forecast is the stack of $CV_rA_r^kE_r$ for $k=1,\ldots,H$. A singular-value floor of $10^{-12}$ handles near-uncontrollable directions. To keep the capacity comparison on the forecast channel, this comparator retains the same full estimated action-response map as the other methods. It is therefore a balanced-state \emph{forecast} comparator, not a claim to compare every variant of standard reduced-controller deployment.
+
+\subsection{Nonlinear feature environment}
+Let physical state $s\sim N(0,I_4)$ and define
+\[
+ \phi(s)=(s_1,\ldots,s_4,\sin s_1,\ldots,\sin s_4,s_1s_2,s_3s_4)^\top.
+\]
+Its covariance $\Sigma$ has linear block $I_4$, sine block $\frac12(1-e^{-2})I_4$, linear--sine cross block $e^{-1/2}I_4$, and product block $I_2$; all other cross blocks vanish. We use features $x=\Sigma^{-1/2}\phi(s)$, giving exact unit second moment. A coefficient matrix is drawn with seed 31 and column scales $(1,1,1,1,.7,.7,.7,.7,.5,.5)$; multiplying by $\Sigma^{1/2}$ gives the whitened $D$. Action response is $\operatorname{diag}(.06,.2,.7,1.2)$ and noise is $.1$. Independent Gaussian actions have variance $\kappa\in\{.1,1\}$. We materialize reset datasets of size 64, 256, and 1024 and use ordinary least squares. The certificate conditions on the observed full design Gram. The dictionary and its covariance are known, not learned using uncounted target data. A separate covariance check on 200,000 states is diagnostic only and is not used for fitting or selection.
+
+\subsection{Rank selection, abstention, and local verification}
+For rank selection, $D=\operatorname{diag}(3,2.2,1.5,1,.6,.3)$ and $B=\operatorname{diag}(.3,.2,.15,.1,.06,.03)$, with noise $.02$, unit coverage, and sample counts 48, 192, 768, 3072, and 12288. We certify ranks zero through six at tolerances $.02$, $.1$, and $.3$. No deployment outcome selects the rank. The 40 abstentions occur at the strictest tolerance and smallest sample count.
+
+
+
+For an independent algebraic check, perturb both $D$ and $B$ by $t$ times fixed directions. Differentiating $K_B$ gives
+\[
+ dK[\Delta B]=H_B^{-1}\{\Delta B^\top-(\Delta B^\top B+B^\top\Delta B)K_B\}.
+\]
+The second-order coefficient of exact regret is the squared $H_B$-weighted norm of $dK[\Delta B]D+K_B\Delta D$. A log--log fit of the absolute remainder over six small perturbation sizes gives slope 3.010, consistent with the local cubic remainder. Theorems~\ref{thm:certificate} and~\ref{thm:oracle} do not rely on this approximation.
+
+\section{Claim and validation ledger}
+Proposition~\ref{prop:exact} and inequality~\eqref{eq:pca} are included as background derivations with explicit prior-work attribution. Lemma~\ref{lem:lipschitz}, Theorems~\ref{thm:certificate}--\ref{thm:lower}, and Corollary~\ref{cor:gaussian} have complete analytic proofs in this draft, but have not undergone independent expert verification or formal proof-assistant checking. The code checks exact identities, perturbation bounds, spectral tails, the harm example, coordinate rotations, and lifted dynamics. Numerical tests cannot establish the universal quantifiers in a mathematical theorem.
+

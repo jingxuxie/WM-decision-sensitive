@@ -1,5 +1,112 @@
 # Decision-sensitive world-model compression
 
-Research code and manuscript on finite-data decision-sensitive representations.
+**The Statistical Price of Decision-Sensitive World-Model Compression**
 
-This repository is being initialized for the proof and experiment package. Claims will be limited to the assumptions and experiments documented in the final manuscript; a conference submission has not been made.
+Research manuscript, complete written proofs, and reproducible CPU experiments.
+Status: research draft, September 15, 2026. No conference submission has been made.
+The proofs have not yet received independent expert or formal verification.
+
+## What is actually studied
+
+A finite-horizon world model predicts `y = D x + B u` and plans under quadratic
+cost `||y||^2 + ||u||^2`, with whitened input second moment. The state/history-to-
+future map `D` is compressed to rank `r`; the learned action-response map `B`
+remains uncompressed. Linear dynamics can be lifted into this setting. A fixed
+nonlinear feature dictionary is also tested. This is **not** a general theorem
+for learned recurrent latent-state models, visual encoders, or closed-loop MPC.
+
+## Results
+
+* An exact, nonlocal identity for decision regret and a global action-response
+  perturbation lemma yield a simultaneous finite-data certificate for every
+  candidate forecast representation.
+* A gap-free oracle inequality separates compression tails, forecast estimation,
+  and uncertainty about action sensitivity. The same calibration event supports
+  choosing a rank after fitting, with explicit abstention when no rank is certified.
+* A two-world controlled system gives an inverse-square-root calibration-energy
+  lower bound for choosing an irreversible rank-one encoder, even when the true
+  controller is subsequently revealed.
+* Inflation is **not uniformly better**: an exact counterexample and retained
+  experimental failures show that certification is distinct from empirical gain.
+
+Known control-weighted compression and spectral slow/fast rates are credited to
+prior work; see the manuscript and `notes/RESEARCH_AUDIT.md`. No "first method"
+or universal empirical-dominance claim is made.
+
+## Reproduce
+
+Python 3.13 was used for the recorded run. Install the pinned numerical packages:
+
+```bash
+python -m venv .venv
+# Linux/macOS: source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m pytest -q
+```
+
+Run the experiment and publication pipeline:
+
+```bash
+# Set OPENBLAS_NUM_THREADS=1 and OMP_NUM_THREADS=1 for recorded timing conditions.
+python experiments/run_experiments.py
+python experiments/make_figures.py
+cd paper
+pdflatex -interaction=nonstopmode -halt-on-error main.tex
+pdflatex -interaction=nonstopmode -halt-on-error main.tex
+```
+
+On systems with GNU Make and a TeX installation, `make all` runs the complete
+pipeline. Standard TeX packages include times, fancyhdr, natbib, eso-pic, amsmath,
+amssymb, amsthm, mathtools, booktabs, graphicx, microtype, and hyperref.
+`paper/main.pdf` is generated locally. The style is a clearly labeled research-
+draft adaptation: read `paper/STYLE_PROVENANCE.md` before preparing a submission.
+
+## Recorded execution
+
+The full main run took **5.62 seconds** in the available CPU environment with one
+BLAS thread; this excludes tests, plotting, and TeX compilation. It is not a
+benchmark on a specified consumer laptop. No GPU, LLM API, or paid data is used.
+
+There are 1,040 main training draws, 16,080 correlated method/rank evaluations,
+12,000 separate rate-experiment rows, and 600 rank-selection queries on 200 fits.
+The implementation passed 9 initial numerical tests. No certificate or oracle-
+bound violation was observed in the recorded experiments. Of the 600 tolerance
+queries, 560 certified a rank and 40 abstained; no certified choice violated its
+tolerance. These diagnostics do not prove the theorems or relax their assumptions.
+
+The rank-one near-tie excess decreased from 0.006442 to 0.000218 as calibration
+probes increased from 32 to 32768. A fixed-gap instance exhibited faster decay.
+In a conflicting-geometry example (n=768, coverage=0.03, rank=1), plug-in regret
+was 0.329 versus 0.502 for inflated geometry. Negative findings are included.
+
+## Files and data accounting
+
+- `paper/main.tex`: manuscript with complete proofs and explicit limitations.
+- `src/geometry.py`: exact regret, compression, confidence radii, and certificates.
+- `experiments/run_experiments.py`: all system definitions, seeds, and experiments.
+- `experiments/make_figures.py`: figures and a table generated from recorded CSVs.
+- `results/RESULTS.md`: recorded comparisons and experimental accounting.
+  The complete `publication_summary.csv` is regenerated and included in the download.
+- `results/rate_summary.csv`, `rank_selection_summary.csv`, `metadata.json`:
+  recorded rates, rank choices, run configuration, and validation counts.
+- `tests/test_geometry.py`: numerical tests, not proof-assistant verification.
+- `notes/RESEARCH_AUDIT.md`: novelty, scope, negative findings, and remaining checks.
+
+Large seed-level CSVs, complete main aggregate summaries, plot binaries, and the compiled
+PDF are regenerated by the scripts rather than stored in Git. The accompanying
+conversation download contains the full recorded raw data and compiled PDF.
+Linear and horizon experiments sample the exact OLS sufficient-statistic law,
+not materialized per-observation datasets. The nonlinear dictionary experiment
+fits actual generated reset data. All methods at a seed use the same data;
+privileged oracle geometry is labeled as a diagnostic. Hyperparameters are
+explicit; the experiments are not claimed to be preregistered.
+
+## Before submission
+
+Obtain independent proof and novelty review; assess whether the restricted
+forecast setting is a sufficient contribution; restore the untouched official
+review style; inspect figures and references; and prepare an anonymized artifact.
+This public repository identifies its owner and must not be linked directly in
+a blinded submission. Extensive AI assistance is disclosed in the manuscript.
+Authorship and final approval remain with the human researchers.
